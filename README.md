@@ -83,6 +83,7 @@
 
 ### 2. Main PC Setup
 > 💡 Tip: A mini PC is sufficient for the main control PC. (e.g., N150)  
+> With remote access, the system can run headless—no monitor, keyboard, or mouse required.   
 
 * Run:
 
