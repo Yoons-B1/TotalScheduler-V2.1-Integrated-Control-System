@@ -1,6 +1,6 @@
 # TotalScheduler V2.1 - [DEMO]
 
-> Integrated control system for PCs, projectors, relays, and media playback environments
+> Python-based integrated control system for PCs, projectors, relays, and media playback environments
 
 ---
 
