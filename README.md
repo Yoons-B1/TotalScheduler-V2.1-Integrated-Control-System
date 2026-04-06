@@ -20,7 +20,7 @@
 * Projector (BEAM) control via PJLink (Power & Shutter)
 * TCP/UDP command output
 
-  * (e.g., sequential power control via TCP relay)
+  * (e.g., sequential power control via TCP relay, Brightsign Player)
 * OSC button & slider control (supports media cue triggering)
 * Time-based OSC triggers
 
@@ -82,7 +82,7 @@
 ---
 
 ### 2. Main PC Setup
-> 💡 Tip: A mini PC is sufficient for the main control PC. (ex: N150)  
+> 💡 Tip: A mini PC is sufficient for the main control PC. (e.g., N150)  
 
 * Run:
 
