@@ -5,7 +5,7 @@ import socket
 BG = "#111315"
 PANEL = "#171a1d"
 ACCENT = "#2a9d8f"
-ACCENT2 = "#3f88c5"  # Save 버튼용 살짝 다른 색
+ACCENT2 = "#3f88c5"
 TEXT = "#e8e8e8"
 SUB = "#a9b2ba"
 
@@ -54,9 +54,6 @@ class SettingsPage(tk.Frame):
         # 라벨 업데이트
         self._update_webserver_info()
 
-        # *** 중요한 부분 ***
-        # 여기서는 실제로 서버를 재시작하지 않고,
-        # "앱을 한번 완전히 종료 후 다시 실행해 주세요" 라고 안내하는 걸 추천.
         messagebox.showinfo(
             "WebServer",
             "Port is saved.\n\nPlease close and restart TotalScheduler to apply the new port."
@@ -1449,7 +1446,6 @@ class SettingsPage(tk.Frame):
             except Exception:
                 pass
 
-        # 스케줄이 변경되었을 수 있으므로, AutoScheduler 하루 1회 실행 기록 리셋
         sched = getattr(self.ctrl, "scheduler", None)
         if sched and hasattr(sched, "reset_fired_dates"):
             try:
