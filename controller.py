@@ -63,12 +63,7 @@ class _TCPKeeper(threading.Thread):
 
 class Controller:
     def send_telegram_alert(self, text: str):
-        """
-        텔레그램으로 오류 알림을 보내는 헬퍼.
-        config.json에 telegram_bot_token, telegram_chat_id가 없으면 조용히 무시.
-        """
         try:
-            # 최근 몇 초 안에 같은 메시지를 이미 보냈다면 중복 방지
             now = time.time()
             if (
                 getattr(self, "_last_telegram_text", None) == text
@@ -91,7 +86,6 @@ class Controller:
             }
             requests.post(url, data=data, timeout=5)
         except Exception as e:
-            # 텔레그램 실패로 전체 앱이 죽지 않도록, 로그만 남김
             self.log(f"Telegram alert failed: {e}")
 
     def __init__(self, app_name: str, author: str):
@@ -110,26 +104,20 @@ class Controller:
         self.pc_error_flags = {}
         self.tcp_error_flags = {}
 
-        # 프로젝터 전원/PC 제어 직후, BEAM 에러 알림을 잠시 무시하기 위한 grace window
         # key: "ip:port" -> timestamp (time.time())
         self.beam_transition_until = {}
 
-        # 우리가 직접 PC에 shutdown/reboot 명령을 보낸 상태인지 표시
+        # 직접 PC에 shutdown/reboot 명령을 보낸 상태인지 표시
         self.pc_shutdown_pending = {}
 
-        # PC에 대해 우리가 shutdown/reboot 명령을 보낸 직후,
-        # 일정 시간(예: 60초) 동안은 비정상 종료로 보지 않기 위한 grace window
         # key: "ip:port" -> timestamp (time.time())
         self.pc_expected_off_until = {}
 
-        # RemotePower 모니터링 최초 1회 여부 (앱 처음 켜졌을 때 알림 방지용)
         self.initial_probe_complete = False
 
-        # 텔레그램 중복 방지용
         self._last_telegram_text = None
         self._last_telegram_time = 0.0
 
-        # --- 첫 실행 여부 체크 (config.json이 존재했는지) ---
         existed = os.path.exists(self.config_path)
 
         # 설정 로드 / 기본 생성
@@ -173,7 +161,7 @@ class Controller:
 
         self._log_listeners = []
         self._log_queue = queue.Queue()
-        self._log_ring = []  # WebUI에서 최근 로그 조회용 (메모리 버퍼)
+        self._log_ring = []  
 
         self._op_lock = threading.Lock()
         self._op_running = False
@@ -203,7 +191,6 @@ class Controller:
         self.log("Controller ready.")
 
     def reset_schedule_fired_dates(self):
-        """스케줄이 변경될 때 AutoScheduler의 '하루 1회 실행' 기록을 리셋."""
         try:
             if hasattr(self, "scheduler") and self.scheduler is not None:
                 self.scheduler.reset_fired_dates()
@@ -263,10 +250,8 @@ class Controller:
                     except Exception:
                         pass
             except Exception:
-                # 정리 실패해도 전체 동작에는 영향 없음
                 pass
         except Exception:
-            # 파일 로그에서 에러가 나도 전체 앱이 죽지 않도록 무시
             pass
 
     def _log_dispatch_loop(self):
@@ -357,22 +342,9 @@ class Controller:
         self.log("Controller shutdown.")
 
     def refresh_pc_keepalives(self):
-        """
-        예전 버전에서는 PC 상태를 TCP keepalive 스레드로 관리했지만,
-        현재 버전에서는 RemotePower.exe(5050 포트)에 대한
-        주기적인 빠른 probe(_quick_pc_probe_once)만 사용한다.
-
-        따라서 이 함수는 더 이상 아무 것도 하지 않는다.
-        (호출해도 부작용 없음)
-        """
         return
 
     def _set_beam_transition_for_all_beams(self, grace_sec: float = None):
-        """
-        BEAM 전원 상태와 직접 관계는 없지만,
-        PC ON/OFF 등의 동작 중에 일시적인 네트워크 부하로 PJLink 폴링이 실패해도
-        텔레그램 BEAM 에러 알림이 쏟아지지 않도록 grace window를 설정한다.
-        """
         try:
             if grace_sec is None:
                 grace_sec = float(self.config.get("beam_transition_grace_sec", 90.0))
@@ -449,17 +421,14 @@ class Controller:
     def group_pc_off(self):
         d = self.config.get("sequential_delay_sec", 1)
 
-        # ✅ 먼저 모든 PC에 대해 shutdown_pending을 미리 설정
         for pc in self.config.get("pcs", []):
             key = f"{pc['ip']}:{pc.get('port', 5050)}"
             self.pc_shutdown_pending[key] = True
 
-        # ✅ 이후 실제 shutdown 명령 전송
         for pc in self.config.get("pcs", []):
             self.pc_off(pc["ip"])
             time.sleep(d)
 
-        # 🔄 shutdown 후 probe로 상태 다시 확인
         threading.Thread(target=self._post_shutdown_pc_probe, daemon=True).start()
 
     def group_pc_reboot(self):
@@ -700,7 +669,6 @@ class Controller:
         else:
             self.log(f"WOL x{repeat} sent -> {ip} ({mac})")
 
-        # PC 전원을 켜는 동안 PJLink 폴링 에러 알림이 쏟아지지 않도록
         self._set_beam_transition_for_all_beams()
 
     def pc_off(self, ip):
@@ -710,11 +678,10 @@ class Controller:
             return
 
         key = f"{ip}:{pc.get('port', 5050)}"
-        self.pc_shutdown_pending[key] = True  # 🔒 텔레그램 알림 방지용
+        self.pc_shutdown_pending[key] = True  
         self._tcp_send(ip, pc.get("port", 5050), b"shutdown")
         self.log(f"PC OFF sent -> {ip}:{pc.get('port', 5050)}")
 
-        # PC를 순차적으로 끌 때도 네트워크 부하로 인한 BEAM 에러 알림을 완화
         self._set_beam_transition_for_all_beams()
 
     def pc_reboot(self, ip):
@@ -724,11 +691,10 @@ class Controller:
             return
 
         key = f"{ip}:{pc.get('port', 5050)}"
-        self.pc_shutdown_pending[key] = True  # 🔒 텔레그램 알림 방지용
+        self.pc_shutdown_pending[key] = True
         self._tcp_send(ip, pc.get("port", 5050), b"reboot")
         self.log(f"PC REBOOT sent -> {ip}:{pc.get('port', 5050)}")
 
-        # 재부팅 시에도 잠시 BEAM 에러 알림을 완화
         self._set_beam_transition_for_all_beams()
 
     # ---- PROJECTOR OPS ----
@@ -777,9 +743,7 @@ class Controller:
         try:
             PJLink(host, p, pw).power_off()
             self.log(f"BEAM OFF -> {host}:{p}")
-            # 정상 동작이면 에러 플래그 리셋
             self.beam_error_flags[key] = False
-            # 쿨다운 구간 동안 BEAM 모니터링 에러 알림을 완화하기 위한 grace window 설정
             try:
                 grace = float(self.config.get("beam_transition_grace_sec", 90.0))
             except Exception:
@@ -815,12 +779,6 @@ class Controller:
 
     # ---- QUICK PROBE LOGIC ----
     def _quick_pc_probe_once(self):
-        """
-        RemotePower.exe(기본 5050 포트)로 TCP 접속을 시도해서
-        - 접속 성공  → 해당 PC 상태: "on"
-        - 접속 실패  → 해당 PC 상태: "off"
-        로 판단한다.
-        """
 
         pcs = self.config.get("pcs", [])
         results = {}
@@ -852,16 +810,11 @@ class Controller:
             is_first = not self.initial_probe_complete
 
             if online:
-                # PC가 다시 켜졌으면 오류 플래그 리셋
                 self.pc_error_flags[key] = False
             else:
                 if pending:
-                    # ✅ 우리가 방금 보낸 OFF/REBOOT/스케줄 OFF 때문에 꺼진 경우
                     self.log(f"[DEBUG] 예상된 종료 - 알림 생략")
-                    # 이 OFF 상태는 '정상 종료된 상태'로 간주해서
-                    # 이후 계속 OFF여도 비정상 종료로 보지 않도록 플래그 고정
                     self.pc_error_flags[key] = True
-                    # 그리고 더 이상 pending 상태로 남지 않도록 해제
                     self.pc_shutdown_pending[key] = False
                 elif is_first:
                     self.log(f"[DEBUG] 최초 실행 감지됨 - 알림 생략")
@@ -870,12 +823,11 @@ class Controller:
                     self.send_telegram_alert(
                         f"[PC] {ip}:{port} offline (RemotePower not responding)"
                     )
-                    self.log(f"[DEBUG] ⚠️ 예기치 않은 종료 - 텔레그램 알림 발송됨")
+                    self.log(f"[DEBUG] 예기치 않은 종료")
                     self.pc_error_flags[key] = True
 
             results[ip] = "on" if online else "off"
 
-        # ✅ 최초 실행 이후에는 초기 플래그 해제
         self.initial_probe_complete = True
 
         # 상태 업데이트
@@ -907,9 +859,6 @@ class Controller:
         return any(v == "on" for v in results.values())
 
     def _post_shutdown_pc_probe(self):
-        """그룹 PC OFF / ALL OFF 이후에 실제로 모든 PC가 꺼졌는지 확인하고
-        텔레그램 알림용 플래그를 정리하는 보조 스레드.
-        """
         time.sleep(5)
         deadline = time.time() + 60
         while time.time() < deadline:
@@ -920,15 +869,10 @@ class Controller:
                     pcs = self.config.get("pcs", [])
                     for pc in pcs:
                         key = f"{pc.get('ip')}:{pc.get('port', 5050)}"
-                        # 이후부터는 "오늘은 꺼져 있는 것이 정상" 상태로 간주
                         self.pc_shutdown_pending[key] = False
-                        # 이미 정상적으로 OFF 처리된 상태이므로,
-                        # 이후 OFF 모니터링에서 다시 알림을 보내지 않도록 플래그를 세팅
                         self.pc_error_flags[key] = True
-                        # 🔚 이 시점부터는 더 이상 grace window가 필요 없으므로 강제로 종료
                         self.pc_expected_off_until[key] = 0.0
                     self.log("[DEBUG] 모든 PC OFF 확인됨 - shutdown_pending 초기화 + 오류플래그 셋 완료")
-                    # ✅ 모든 PC OFF 후 초기화했으면, 추가 모니터링은 하지 않는다!
                     return
                 except Exception:
                     self.log("[DEBUG] shutdown_pending 초기화 중 예외 발생")
@@ -938,11 +882,6 @@ class Controller:
 
     # ---- ALL ON 5분뒤 체크  ----
     def schedule_post_all_on_check(self, delay_sec: int = 300):
-        """
-        자동 스케줄 ALL ON 이후 delay_sec초 뒤에
-        아직 켜지지 않은 PC/BEAM을 텔레그램으로 알려준다.
-        (평상시 상시 모니터링 알림이 아니라, 스케줄 ALL ON용 1회 체크)
-        """
         def _job():
             try:
                 # 부팅/전원 안정화 대기
@@ -1018,7 +957,6 @@ class Controller:
                                 elif s in ("31", "close", "1"):
                                     sh = "close"
                                 else:
-                                    # 다른 브랜드에서 이미 "open"/"close"를 주는 경우 등을 그대로 유지
                                     sh = raw_sh
                         except Exception:
                             sh = None
@@ -1050,10 +988,8 @@ class Controller:
                                 beams.append(entry)
                                 self.state["projectors"] = beams
 
-                        # --- 여기서 모니터링 기반 BEAM 오류 알림 처리 ---
                         is_error = (status == "error")
                         if is_error:
-                            # 처음 error 상태로 판정될 때만 로그 + 텔레그램 1번알림
                             if not self.beam_error_flags.get(key, False):
                                 self.log(f"[BEAM] Detected failed -> {host}:{port} (status={status})")
                                 self.send_telegram_alert(
@@ -1061,7 +997,6 @@ class Controller:
                                 )
                                 self.beam_error_flags[key] = True
                         else:
-                            # 이전에 에러였는데 지금은 정상으로 돌아온 경우
                             if self.beam_error_flags.get(key, False):
                                 self.log(f"[BEAM] Back to normal -> {host}:{port} (status={status})")
                             self.beam_error_flags[key] = False
@@ -1070,7 +1005,6 @@ class Controller:
 
                     except Exception as e:
                         self.log(f"[BEAM] Detected problem -> {host}:{port} -> {e}")
-                        # 모니터링 자체가 실패한 경우도 처음 한 번만 알림
                         if not self.beam_error_flags.get(key, False):
                             self.send_telegram_alert(
                                 f"[BEAM] Detected problem -> {host}:{port}\n{e}"
@@ -1096,7 +1030,6 @@ class Controller:
     def _tcp_send(self, ip, port, payload: bytes):
         key = f"{ip}:{port}"
 
-        # 이 payload가 PC shutdown/reboot 명령인지 미리 판별
         is_pc_cmd = False
         try:
             if isinstance(payload, (bytes, bytearray)):
@@ -1108,7 +1041,6 @@ class Controller:
         except Exception:
             is_pc_cmd = False
 
-        # ✅ 명령 전이라도 먼저 pending 플래그를 설정 (텔레그램 알림 막기 위함)
         if is_pc_cmd:
             self.pc_shutdown_pending[key] = True
             # 명령 직후 일정 시간 동안은 "예상된 종료"로 간주하기 위한 시간 기록
@@ -1121,8 +1053,6 @@ class Controller:
 
             time.sleep(1.0)
 
-            # payload를 bytes로 변환하면서,
-            # 이것이 PDU ON/OFF 명령인지도 같이 판별한다.
             if isinstance(payload, str):
                 data = payload.encode("utf-8", errors="ignore")
                 upper = payload.upper()
@@ -1135,11 +1065,6 @@ class Controller:
                     upper = ""
                 is_pdu_cmd = upper.startswith("PDU ")
 
-            # ⚠ PDU 릴레이용 명령(PDU ON / PDU OFF)은
-            #    친구 스케줄러와 동일하게 개행문자 없이
-            #    "PDU OFF" 딱 이것만 보내야 한다.
-            #
-            # RemotePower, 기타 TCP 장비들은 기존처럼 \r\n 붙여서 전송.
             if (not is_pdu_cmd) and (not data.endswith(b"\n")):
                 data += b"\r\n"
 
