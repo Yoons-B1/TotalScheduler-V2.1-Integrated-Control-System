@@ -1,4 +1,4 @@
-# ---- 콘솔창 숨기기 (PyInstaller --console 빌드용, 작업표시줄에서도 숨김) ----
+# ---- 콘솔창 숨기기 ----
 import sys
 
 if getattr(sys, "frozen", False):
@@ -27,11 +27,9 @@ if getattr(sys, "frozen", False):
             style &= ~WS_EX_APPWINDOW
             user32.SetWindowLongW(hWnd, GWL_EXSTYLE, style)
 
-            # 그리고 창 자체도 숨김
             user32.ShowWindow(hWnd, 0)  # SW_HIDE
 
     except Exception:
-        # 어떤 이유로 실패해도 앱은 계속 실행
         pass
 # --------------------------------------------------------------------------
 import tkinter as tk
@@ -105,7 +103,7 @@ def main():
     root.geometry("1280x900")
     root.configure(bg="#111315")
 
-    # 컨트롤러는 딱 한 번만 생성
+    # 컨트롤러는 한 번만 생성
     ctrl = Controller(app_name=APP_TITLE, author=AUTHOR)
 
     # WebUI 서버 시작 (모바일/태블릿용)
