@@ -1,3 +1,4 @@
+![Platform](https://img.shields.io/badge/platform-Windows-blue)
 # TotalScheduler V2.1 - [DEMO]
 
 > Python-based **Windows** integrated control system for PCs, projectors, relays, and media playback environments.  
