@@ -24,7 +24,7 @@
 * OSC button & slider control (supports media cue triggering)
 * Time-based OSC triggers
 
-  * (e.g., scheduled content playback, LED brightness control)
+  * (e.g., scheduled content playback, Time-based LED brightness control)
 * Weekly auto scheduling (ALL ON / ALL OFF)
 * Built-in Web Server for monitoring via mobile/tablet (local network)
 * Demo available for 2 weeks
