@@ -1,4 +1,4 @@
-![Platform](https://img.shields.io/badge/platform-Windows-blue) ![Release](https://img.shields.io/github/v/release/Yoons-B1/TotalScheduler-V2.1-Integrated-Control-System) ![License](https://img.shields.io/github/license/Yoons-B1/TotalScheduler-V2.1-Integrated-Control-System)
+![Platform](https://img.shields.io/badge/platform-Windows-blue) [![Release](https://img.shields.io/badge/Release-V2.1--LC14-a0d501)](https://github.com/Yoons-B1/TotalScheduler-V2.1-Integrated-Control-System/releases) ![License](https://img.shields.io/github/license/Yoons-B1/TotalScheduler-V2.1-Integrated-Control-System)
 # TotalScheduler V2.1 - [DEMO]
 
 > Python-based **Windows** integrated control system for PCs, projectors, relays, and media playback environments.  
