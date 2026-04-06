@@ -82,6 +82,7 @@
 ---
 
 ### 2. Main PC Setup
+> 💡 Tip: A mini PC is sufficient for the main control PC. (ex: N150)  
 
 * Run:
 
