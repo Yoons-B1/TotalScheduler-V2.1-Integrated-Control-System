@@ -8,22 +8,13 @@ class AutoScheduler(threading.Thread):
         super().__init__(daemon=True)
         self.ctrl = controller
         self._stop = threading.Event()
-        # 하루에 한 번 실행 여부 기록 (on/off 각각)
         self.last_fired_date = {"on": None, "off": None}
-        # 스케줄러가 시작된 시각
-        # → 앱 재시작 시, 이미 과거에 지나간 스케줄이 바로 실행되는 것을 막기 위함
         self.started_at = datetime.datetime.now()
 
     def stop(self):
         self._stop.set()
 
     def reset_fired_dates(self):
-        """
-        사용자가 스케줄 ON/OFF 시간을 수정했을 때,
-        같은 날에도 다시 테스트할 수 있도록 실행 이력을 초기화하되,
-        이미 '현재 시각보다 이전'인 스케줄은 다시 실행되지 않도록
-        오늘 실행한 것으로 표시한다.
-        """
         now = datetime.datetime.now()
         self.last_fired_date = {"on": None, "off": None}
 
@@ -47,8 +38,6 @@ class AutoScheduler(threading.Thread):
         on_at = parse_time("all_on_time", "09:00")
         off_at = parse_time("all_off_time", "18:00")
 
-        # 이미 현재 시각보다 과거인 스케줄은
-        # → 오늘 한 번 실행된 것으로 간주해서 다시 안 돌게 막는다.
         today = now.date()
         if on_at < now:
             self.last_fired_date["on"] = today
@@ -61,7 +50,6 @@ class AutoScheduler(threading.Thread):
             pass
 
     def run(self):
-        # 하루에 한 번만 실행되도록 기록
 
         while not self._stop.is_set():
             try:
@@ -135,20 +123,14 @@ class AutoScheduler(threading.Thread):
                     if target_dt is None:
                         return False
 
-                    # 🔒 앱을 다시 켰을 때,
-                    # 스케줄러 시작 이전에 이미 지나간 시간(과거 스케줄)은
-                    # 바로 다시 실행되지 않도록 막는다.
                     if target_dt < self.started_at:
                         return False
 
                     today = now.date()
-                    # 오늘 이미 한 번 실행했으면 패스
                     if self.last_fired_date.get(tag) == today:
                         return False
 
                     delta_sec = (now - target_dt).total_seconds()
-                    #   1) 지금 시간이 target 이후여야 하고 (delta>=0)
-                    #   2) target 이후 15분(900초) 이내일 때만 실행
                     if 0 <= delta_sec <= 15 * 60:
                         self.last_fired_date[tag] = today
                         return True
