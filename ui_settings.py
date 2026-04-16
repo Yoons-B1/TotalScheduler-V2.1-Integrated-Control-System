@@ -22,20 +22,17 @@ class SettingsPage(tk.Frame):
             return "127.0.0.1"
 
     def _update_webserver_info(self):
-        # IP 텍스트
         ip = self._get_local_ip()
         port = self.ctrl.config.get("web_port", 9999)
 
         self.ws_label.config(text=f"WebServer - {ip} : {port}")
 
-        # 상태 점 (web_server_ok 플래그 기반)
         ok = getattr(self.ctrl, "web_server_ok", False)
         self.ws_canvas.delete("all")
         color = "#6dc36d" if ok else "#e45858"
         self.ws_canvas.create_oval(2, 2, 12, 12, fill=color, outline=color)
 
     def _on_web_restart(self):
-        # 포트 입력값 검증 + 저장
         s = self.ws_port_var.get().strip()
         if not s:
             s = "9999"
@@ -45,13 +42,10 @@ class SettingsPage(tk.Frame):
             messagebox.showerror("WebServer", "Port must be a number.")
             return
 
-        # 설정에 저장
         self.ctrl.config["web_port"] = port
-        # 컨트롤러에 save 메서드가 있다면 호출
         if hasattr(self.ctrl, "save_config"):
             self.ctrl.save_config()
 
-        # 라벨 업데이트
         self._update_webserver_info()
 
         messagebox.showinfo(
@@ -73,7 +67,6 @@ class SettingsPage(tk.Frame):
         self._beam_widgets = {}
         self._log_buffer = []
 
-        # OSC GUI용 내부 저장소
         self.osc_enable_vars = []
         self.osc_label_entries = []
         self.osc_ip_entries = []
@@ -82,7 +75,6 @@ class SettingsPage(tk.Frame):
         self.osc_value_entries = []
         self.osc_type_boxes = []
 
-        # 슬라이더 GUI용 내부 저장소
         self.slider_enable_vars = []
         self.slider_label_entries = []
         self.slider_ip_entries = []
@@ -92,21 +84,18 @@ class SettingsPage(tk.Frame):
         self.slider_max_entries = []
         self.slider_type_boxes = []
 
-        # --------------- 상단 타이틀 ---------------
         title = tk.Label(
             self,
             text="Setup",
             fg=TEXT,
             bg=BG,
-            font=("Segoe UI", 24, "bold"),   # 메인페이지 Total Scheduler와 비슷한 크기
+            font=("Segoe UI", 24, "bold"),
         )
-        title.pack(pady=(20, 8))             # 중앙 정렬 (anchor 없음)
+        title.pack(pady=(20, 8))
 
-        # --------------- 헤더 영역 (버튼들) ---------------
         header = tk.Frame(self, bg=BG)
         header.pack(fill="x", pady=(0, 8))
 
-        # 오른쪽: Save Settings + Back
         tk.Button(
             header,
             text="Save Settings",
@@ -130,11 +119,9 @@ class SettingsPage(tk.Frame):
         ).pack(side="right", padx=(0, 8))
 
 
-        # --------------- 바디 레이아웃 ---------------
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True, padx=12, pady=10)
 
-        # 왼쪽: 스크롤 가능한 설정 폼
         left_wrap = tk.Frame(body, bg=BG)
         left_wrap.pack(side="left", fill="both", expand=True, padx=(0, 8))
 
@@ -152,7 +139,6 @@ class SettingsPage(tk.Frame):
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
         )
 
-        # 오른쪽: 옵션 + 로그뷰
         right = tk.Frame(body, bg=BG)
         right.pack(side="left", fill="y")
 
@@ -218,7 +204,6 @@ class SettingsPage(tk.Frame):
             anchor="nw", padx=8, pady=(0, 8), fill="y"
         )
 
-        # --------------- PCs 폼 ---------------
         tk.Label(self.inner, text="PCs", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(anchor="w", pady=(0, 6))
 
         row = tk.Frame(self.inner, bg=BG)
@@ -256,7 +241,6 @@ class SettingsPage(tk.Frame):
         )
         self.pc_container.pack(fill="x", pady=(4, 12))
 
-        # --------------- Projectors 폼 ---------------
         tk.Label(self.inner, text="Projectors", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(
             anchor="w", pady=(0, 6)
         )
@@ -296,7 +280,6 @@ class SettingsPage(tk.Frame):
         )
         self.beam_container.pack(fill="x", pady=(4, 12))
 
-        # --------------- TCP Outputs 폼 ---------------
         tk.Label(self.inner, text="TCP Outputs", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(
             anchor="w", pady=(0, 6)
         )
@@ -336,7 +319,6 @@ class SettingsPage(tk.Frame):
         )
         self.tcp_container.pack(fill="x", pady=(4, 12))
 
-        # --------------- OSC Buttons 폼 ---------------
         tk.Label(self.inner, text="OSC Buttons", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(
             anchor="w", pady=(4, 6)
         )
@@ -359,7 +341,6 @@ class SettingsPage(tk.Frame):
         for i in range(max_osc):
             cfg = osc_cfg[i]
 
-            # 1줄: Enable + Label
             row1 = tk.Frame(self.inner, bg=BG)
             row1.pack(fill="x", pady=(2, 0))
 
@@ -381,7 +362,6 @@ class SettingsPage(tk.Frame):
 
             tk.Label(row1, text="", bg=BG).pack(side="left", expand=True, fill="x")
 
-            # 2줄: IP, Port, Address, Value, Type + Send
             row2 = tk.Frame(self.inner, bg=BG)
             row2.pack(fill="x", pady=(0, 4))
 
@@ -402,7 +382,7 @@ class SettingsPage(tk.Frame):
             if stored_val:
                 e_val.insert(0, stored_val)
             else:
-                e_val.insert(0, "value(1,0)")  # 안내 문구
+                e_val.insert(0, "value(1,0)")
             e_val.pack(side="left", padx=3)
 
             box = ttk.Combobox(
@@ -432,7 +412,6 @@ class SettingsPage(tk.Frame):
             self.osc_value_entries.append(e_val)
             self.osc_type_boxes.append(box)
 
-        # --------------- OSC Sliders 폼 (2개) ---------------
         tk.Label(self.inner, text="OSC Sliders", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(
             anchor="w", pady=(8, 6)
         )
@@ -516,7 +495,6 @@ class SettingsPage(tk.Frame):
             self.slider_max_entries.append(s_max)
             self.slider_type_boxes.append(s_box)
 
-        # --------------- Auto Schedule ---------------
         tk.Label(
             self.inner,
             text="Auto Schedule",
@@ -525,13 +503,11 @@ class SettingsPage(tk.Frame):
             font=("Segoe UI", 11, "bold"),
         ).pack(anchor="w", pady=(8, 6))
 
-        # 스케줄 설정 데이터 (config) 가져오기 + 기본값
         sch_cfg = self.ctrl.config.setdefault("schedule", {})
         raw_days = sch_cfg.get("enabled_days", [True, True, True, True, True, True, False])
         if len(raw_days) != 7:
             raw_days = (list(raw_days) + [True] * 7)[:7]
 
-        # Enable 플래그 + 요일 변수들
         self.var_schedule_enabled = tk.BooleanVar(
             value=sch_cfg.get("enabled", True)
         )
@@ -543,11 +519,9 @@ class SettingsPage(tk.Frame):
             value=int(sch_cfg.get("reboot_delay_min", 5) or 5)
         )
 
-        # 프레임 생성
         sch = tk.Frame(self.inner, bg=BG)
         sch.pack(fill="x")
 
-        # Enable Auto Schedule 체크박스
         tk.Checkbutton(
             sch,
             text="Enable Auto Schedule",
@@ -558,7 +532,6 @@ class SettingsPage(tk.Frame):
             activebackground=BG,
         ).grid(row=0, column=0, columnspan=7, sticky="w", padx=4, pady=(0, 4))
 
-        # 요일 체크박스 (Mon~Sun)
         for col, (dvar, name) in enumerate(
             zip(self.day_vars, ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
         ):
@@ -572,7 +545,6 @@ class SettingsPage(tk.Frame):
                 activebackground=BG,
             ).grid(row=1, column=col, padx=4)
 
-        # ALL ON 시간 설정
         t1 = tk.Frame(self.inner, bg=BG)
         t1.pack(fill="x", pady=(6, 2))
         tk.Label(t1, text="ALL ON", fg=TEXT, bg=BG).pack(side="left", padx=4)
@@ -589,11 +561,10 @@ class SettingsPage(tk.Frame):
             t1,
             width=4,
             state="readonly",
-            values=[f"{m:02d}" for m in range(60)],   # 00~59
+            values=[f"{m:02d}" for m in range(60)],
         )
         self.on_min.pack(side="left", padx=2)
 
-        # ALL OFF 시간 설정
         t2 = tk.Frame(self.inner, bg=BG)
         t2.pack(fill="x", pady=(2, 8))
         tk.Label(t2, text="ALL OFF", fg=TEXT, bg=BG).pack(side="left", padx=4)
@@ -609,11 +580,10 @@ class SettingsPage(tk.Frame):
             t2,
             width=4,
             state="readonly",
-            values=[f"{m:02d}" for m in range(60)],   # 00~59
+            values=[f"{m:02d}" for m in range(60)],
         )
         self.off_min.pack(side="left", padx=2)
 
-        # ALL ON 후 PC 자동 REBOOT 옵션
         reboot_frame = tk.Frame(self.inner, bg=BG)
         reboot_frame.pack(fill="x", pady=(2, 8))
 
@@ -643,7 +613,6 @@ class SettingsPage(tk.Frame):
         )
         self.reboot_delay_entry.pack(side="left", padx=2)
 
-        # 초기 시간값 세팅 (config에서 가져오기)
         on_str = sch_cfg.get("all_on_time", "09:00")
         off_str = sch_cfg.get("all_off_time", "18:00")
         try:
@@ -657,16 +626,13 @@ class SettingsPage(tk.Frame):
         self.off_hour.set(off_h)
         self.off_min.set(off_m)
 
-        # --- WebServer info (footer 바로 위) ---
         ws_frame = tk.Frame(self.inner, bg="#111315")
         ws_frame.pack(fill="x", pady=(10, 6))
 
-        # 상태 점 (초록 / 빨강)
         self.ws_canvas = tk.Canvas(ws_frame, width=14, height=14,
                                    bg="#111315", highlightthickness=0)
         self.ws_canvas.pack(side="left", padx=(4, 6))
 
-        # "WebServer - IP : Port" 텍스트
         self.ws_label = tk.Label(
             ws_frame,
             text="WebServer - ...",
@@ -676,7 +642,6 @@ class SettingsPage(tk.Frame):
         )
         self.ws_label.pack(side="left")
 
-        # 포트 레이블
         port_label = tk.Label(
             ws_frame,
             text="Port",
@@ -686,7 +651,6 @@ class SettingsPage(tk.Frame):
         )
         port_label.pack(side="left", padx=(12, 4))
 
-        # 포트 입력칸 (설정값 사용, 없으면 9999)
         self.ws_port_var = tk.StringVar()
         self.ws_port_var.set(str(self.ctrl.config.get("web_port", 9999)))
         self.ws_port_entry = tk.Entry(
@@ -701,7 +665,6 @@ class SettingsPage(tk.Frame):
         )
         self.ws_port_entry.pack(side="left")
 
-        # Restart 버튼
         self.ws_restart_btn = tk.Button(
             ws_frame,
             text="Restart",
@@ -717,10 +680,8 @@ class SettingsPage(tk.Frame):
         )
         self.ws_restart_btn.pack(side="left", padx=(8, 0))
 
-        # 처음 화면 표시 업데이트
         self._update_webserver_info()
 
-        # --------------- Footer Message ---------------
         tk.Label(self.inner, text="Footer message", fg=TEXT, bg=BG, font=("Segoe UI", 11, "bold")).pack(
             anchor="w", pady=(8, 6)
         )
@@ -739,7 +700,6 @@ class SettingsPage(tk.Frame):
         )
         self.footer.pack(fill="x", pady=(0, 6))
 
-        # --------------- 로그 구독 / 초기화 ---------------
         def _on_log(line: str):
             self._log_buffer.append(line)
 
@@ -749,12 +709,7 @@ class SettingsPage(tk.Frame):
         self.refresh_lists()
         self._status_tick()
 
-    # ----------------- 헬퍼 / 공통 -----------------
     def _toggle_log_view(self):
-        """Checkbox now acts as log PLAY/PAUSE for live update.
-        Layout is fixed; actual gating is handled in _flush_logs.
-        """
-        # Nothing to do here; we just read var_showlog in _flush_logs.
         return
 
     def _set_placeholder(self, entry: tk.Entry, text: str):
@@ -773,22 +728,14 @@ class SettingsPage(tk.Frame):
         self.after(300, self._flush_logs)
 
     def _color(self, status):
-        """
-        상태에 따른 점 색상:
-        - "on"    → 초록
-        - "error" → 빨강 (연결 끊김 / 통신 오류 등)
-        - 그 외   → 회색 (꺼짐, 알 수 없음 등)
-        """
         if status == "on":
-            return "#6dc36d"          # ON (초록)
+            return "#6dc36d"
         elif status == "error":
-            return "#ef476f"          # ERROR (빨강) - 메인앱에서 쓰는 빨강과 통일
+            return "#ef476f"
         else:
-            return "#a9b2ba"          # OFF/UNKNOWN (회색)
+            return "#a9b2ba"
 
-    # ----------------- 리스트 구성 -----------------
     def refresh_lists(self):
-        # PC 리스트
         for w in self.pc_container.winfo_children():
             w.destroy()
         self._pc_dots.clear()
@@ -871,7 +818,6 @@ class SettingsPage(tk.Frame):
                 ),
             ).pack(side="right", padx=3)
 
-        # Projector 리스트
         for w in self.beam_container.winfo_children():
             w.destroy()
         self._beam_widgets.clear()
@@ -986,7 +932,6 @@ class SettingsPage(tk.Frame):
                 ),
             ).pack(side="right", padx=3)
 
-        # TCP 리스트
         for w in self.tcp_container.winfo_children():
             w.destroy()
         tcp_entries = self.ctrl.config.get("tcp_outputs", [])
@@ -1089,7 +1034,6 @@ class SettingsPage(tk.Frame):
 
         self.after(1000, self._status_tick)
 
-    # ----------------- CRUD: PC -----------------
     def _read_entry(self, e: tk.Entry):
         return e.get().strip()
 
@@ -1145,7 +1089,6 @@ class SettingsPage(tk.Frame):
         self.pc_port.insert(0, str(pc.get("port", 5050)))
         self._pc_edit_index = idx
 
-    # ----------------- CRUD: Projector -----------------
     def add_beam(self):
         name = self._read_entry(self.b_name)
         ip = self._read_entry(self.b_ip)
@@ -1197,7 +1140,6 @@ class SettingsPage(tk.Frame):
         self.b_pass.insert(0, b.get("password", ""))
         self._beam_edit_index = idx
 
-    # ----------------- CRUD: TCP -----------------
     def add_tcp(self):
         name = self._read_entry(self.tcp_name)
         ip = self._read_entry(self.tcp_ip)
@@ -1281,7 +1223,6 @@ class SettingsPage(tk.Frame):
             arr[idx][key] = bool(value)
             self.ctrl.save_config()
 
-    # ----------------- OSC: 테스트 전송 -----------------
     def _send_osc_row(self, idx: int):
         if idx < 0 or idx >= len(self.osc_enable_vars):
             return
@@ -1313,9 +1254,7 @@ class SettingsPage(tk.Frame):
             vtype,
         )
 
-    # ----------------- Save -----------------
     def save(self):
-        # 스케줄
         sch_cfg = self.ctrl.config.setdefault("schedule", {})
 
         sch_cfg["enabled"] = self.var_schedule_enabled.get()
@@ -1336,7 +1275,6 @@ class SettingsPage(tk.Frame):
         # footer 메시지
         self.ctrl.contact_message = self.footer.get("1.0", "end").strip()
 
-        # 옵션들
         aot = bool(self.var_top.get())
         shut = bool(self.var_shut.get())
         showlog = bool(self.var_showlog.get())
@@ -1345,7 +1283,6 @@ class SettingsPage(tk.Frame):
         self.ctrl.config["enable_shutter_shortcut"] = shut
         self.ctrl.config["show_log_view"] = showlog
 
-        # OSC 버튼 설정 저장
         osc_list = []
         for i in range(len(self.osc_enable_vars)):
             enabled = bool(self.osc_enable_vars[i].get())
@@ -1374,7 +1311,6 @@ class SettingsPage(tk.Frame):
             )
         self.ctrl.config["osc_buttons"] = osc_list
 
-        # OSC 슬라이더 설정 저장
         slider_list = []
         old_sliders = self.ctrl.config.get("osc_sliders", [])
 
@@ -1401,7 +1337,6 @@ class SettingsPage(tk.Frame):
             except Exception:
                 vmax = vmin + 1
 
-            # 기존에 저장된 current 값이 있으면 그대로 유지
             current_val = None
             if 0 <= i < len(old_sliders):
                 try:
@@ -1426,7 +1361,6 @@ class SettingsPage(tk.Frame):
 
         self.ctrl.config["osc_sliders"] = slider_list
 
-        # Always on top 반영
         try:
             if self.root_ref is not None:
                 self.root_ref.attributes("-topmost", aot)
