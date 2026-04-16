@@ -55,12 +55,10 @@ class AutoScheduler(threading.Thread):
             try:
                 cfg = self.ctrl.config.get("schedule", {})
 
-                # 전체 Enable 플래그 (없으면 True로 간주)
                 if not cfg.get("enabled", True):
                     time.sleep(1.0)
                     continue
 
-                # 요일 배열 정리
                 enabled_days = cfg.get("enabled_days", [True] * 7)
                 if len(enabled_days) != 7:
                     enabled_days = (list(enabled_days) + [True] * 7)[:7]
@@ -75,24 +73,20 @@ class AutoScheduler(threading.Thread):
                 def parse_time(key, default_str):
                     raw = cfg.get(key, default_str)
                     try:
-                        # Case ① WebUI 저장: 문자열 "20:40" 형태
                         if isinstance(raw, str):
                             h, m = raw.split(":", 1)
                             return now.replace(hour=int(h), minute=int(m),
                                                second=0, microsecond=0)
 
-                        # Case ② 메인앱에서 저장될 수 있는 (튜플/리스트) 형태
                         if isinstance(raw, (list, tuple)) and len(raw) == 2:
                             h, m = raw
                             return now.replace(hour=int(h), minute=int(m),
                                                second=0, microsecond=0)
 
-                        # Case ③ datetime.time 형태로 저장된 상황 대비
                         if isinstance(raw, datetime.time):
                             return now.replace(hour=raw.hour, minute=raw.minute,
                                                second=0, microsecond=0)
 
-                        # Case ④ dict 형태 저장 대비  {"hour":20,"minute":40}
                         if isinstance(raw, dict) and "hour" in raw and "minute" in raw:
                             return now.replace(hour=int(raw["hour"]), minute=int(raw["minute"]),
                                                second=0, microsecond=0)
@@ -100,14 +94,12 @@ class AutoScheduler(threading.Thread):
                     except Exception:
                         pass
 
-                    # ⑤ 파싱 실패 시 기본값 사용
                     h, m = map(int, default_str.split(":"))
                     return now.replace(hour=h, minute=m, second=0, microsecond=0)
 
                 on_at = parse_time("all_on_time", "09:00")
                 off_at = parse_time("all_off_time", "18:00")
 
-                # 스케줄 옵션: ALL ON 후 PC 자동 재부팅 여부 + 딜레이(분)
                 reboot_enabled = bool(cfg.get("reboot_after_on_enabled", False))
                 reboot_delay_min = cfg.get("reboot_delay_min", 5)
                 try:
@@ -141,7 +133,6 @@ class AutoScheduler(threading.Thread):
                     self.ctrl.run_async("ALL ON (Auto)", self.ctrl.all_on)
 
                     if reboot_enabled:
-                        # ALL ON 후 지정된 시간(분) 뒤 PC 순차 재부팅 + 그 후 5분 뒤 상태 체크
                         def _reboot_job():
                             try:
                                 time.sleep(reboot_delay_min * 60)
@@ -151,7 +142,6 @@ class AutoScheduler(threading.Thread):
                                 )
                                 self.ctrl.group_pc_reboot()
 
-                                # 재부팅 후 5분 뒤에도 안 켜진 PC/BEAM 알림
                                 try:
                                     self.ctrl.schedule_post_all_on_check(delay_sec=300)
                                 except Exception as e:
@@ -163,9 +153,8 @@ class AutoScheduler(threading.Thread):
 
                         threading.Thread(target=_reboot_job, daemon=True).start()
                     else:
-                        # 기존 동작: ALL ON 후 5분 뒤 체크
                         try:
-                            self.ctrl.schedule_post_all_on_check(delay_sec=300)  # 5분
+                            self.ctrl.schedule_post_all_on_check(delay_sec=300)  
                         except Exception as e:
                             self.ctrl.log(f"schedule_post_all_on_check failed: {e}")
 
