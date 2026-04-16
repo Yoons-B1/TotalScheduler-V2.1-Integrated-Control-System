@@ -27,7 +27,6 @@ if getattr(sys, "frozen", False):
 
     except Exception:
         pass
-# --------------------------------------------------------------------------
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.font as tkfont
