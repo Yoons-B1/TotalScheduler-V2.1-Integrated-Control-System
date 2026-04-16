@@ -184,7 +184,6 @@ class SettingsPage(tk.Frame):
             command=self._toggle_log_view,
         ).pack(anchor="w")
 
-        # LOG VIEW
         self.log_label = tk.Label(right, text="Log View", fg=TEXT, bg=BG)
         self.log_view = tk.Text(
             right,
@@ -198,7 +197,6 @@ class SettingsPage(tk.Frame):
             state="disabled",
         )
 
-        # Log view is always visible; checkbox now controls live update (play/pause)
         self.log_label.pack(anchor="w", padx=8, pady=(8, 4))
         self.log_view.pack(
             anchor="nw", padx=8, pady=(0, 8), fill="y"
@@ -1272,7 +1270,6 @@ class SettingsPage(tk.Frame):
             rd = 120
         sch_cfg["reboot_delay_min"] = rd
 
-        # footer 메시지
         self.ctrl.contact_message = self.footer.get("1.0", "end").strip()
 
         aot = bool(self.var_top.get())
