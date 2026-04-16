@@ -10,7 +10,7 @@ ERR = "#e76f51"
 BTN_W = 18
 BTN_H = 3
 
-OSC_COLOR = "#f4a261"  # OSC 버튼 색상 (기존과 다른 색)
+OSC_COLOR = "#f4a261"
 
 
 class MainPage(tk.Frame):
@@ -23,12 +23,10 @@ class MainPage(tk.Frame):
         self._open_btn = None
         self._close_btn = None
         self._shutter_bound = False
-        self._osc_sig = None      # OSC 버튼 구성 시그니처
-        self._slider_sig = None   # OSC 슬라이더 구성 시그니처
+        self._osc_sig = None
+        self._slider_sig = None
 
-        # ----------------- 헤더 -----------------
         header = tk.Frame(self, bg=BG)
-        # 위쪽 여백 조금 줄이고 전체를 살짝 위로
         header.pack(fill="x", pady=(6, 4))
         tk.Label(
             header,
@@ -44,20 +42,16 @@ class MainPage(tk.Frame):
             fg="white",
             relief="flat",
             width=9,
-            height=1,   # 버튼을 살짝 작게
+            height=1,
             command=on_open_settings,
         ).pack(side="right", padx=16)
 
-        # ----------------- 바디 -----------------
         body = tk.Frame(self, bg=BG)
-        # 세로 여백을 조금 줄여서 전체를 위로
         body.pack(fill="both", expand=True, padx=12, pady=4)
 
-        # 왼쪽: 제어 버튼들
         left_controls = tk.Frame(body, bg=BG)
         left_controls.pack(side="left", fill="y", padx=(0, 8))
 
-        # 1줄: ALL ON / ALL OFF
         r1 = tk.Frame(left_controls, bg=BG)
         r1.pack(pady=8)
         tk.Button(
@@ -81,7 +75,6 @@ class MainPage(tk.Frame):
             command=lambda: self.ctrl.run_async("ALL OFF", self.ctrl.all_off),
         ).pack(side="left", padx=8)
 
-        # 2줄: PC 그룹
         r2 = tk.Frame(left_controls, bg=BG)
         r2.pack(pady=8)
         tk.Button(
@@ -105,7 +98,6 @@ class MainPage(tk.Frame):
             command=lambda: self.ctrl.run_async("PC GROUP OFF", self.ctrl.group_pc_off),
         ).pack(side="left", padx=8)
 
-        # 3줄: BEAM 그룹
         r3 = tk.Frame(left_controls, bg=BG)
         r3.pack(pady=8)
         tk.Button(
@@ -129,7 +121,6 @@ class MainPage(tk.Frame):
             command=lambda: self.ctrl.run_async("BEAM GROUP OFF", self.ctrl.group_beam_off),
         ).pack(side="left", padx=8)
 
-        # 4줄: SHUTTER (설정에 따라 표시)  ← ★ OSC보다 위에
         self.r4 = tk.Frame(left_controls, bg=BG)
         self._open_btn = tk.Button(
             self.r4,
@@ -154,15 +145,12 @@ class MainPage(tk.Frame):
         )
         self._close_btn.pack(side="left", padx=8)
 
-        # 5줄: OSC 버튼 영역 (기본 버튼들 + 셔터 아래)
         self.osc_frame = tk.Frame(left_controls, bg=BG)
         self.osc_frame.pack(fill="x", pady=(16, 0))
 
-        # 6줄: OSC 슬라이더 2줄
         self.slider_frame = tk.Frame(left_controls, bg=BG)
         self.slider_frame.pack(fill="x", pady=(12, 0))
 
-        # 오른쪽: 상태 리스트
         right_status = tk.Frame(body, bg=BG)
         right_status.pack(side="left", fill="both", expand=True)
 
@@ -184,7 +172,6 @@ class MainPage(tk.Frame):
         )
         self.beam_list.pack(fill="both", expand=True, pady=(4, 10))
 
-        # ----------------- 푸터 -----------------
         footer = tk.Frame(self, bg=BG)
         footer.pack(fill="x", side="bottom", pady=(6, 12))
         self.time_label = tk.Label(footer, text="", fg=SUBTEXT, bg=BG)
@@ -197,7 +184,6 @@ class MainPage(tk.Frame):
         )
         self.msg_label.pack(side="right", padx=16)
 
-        # ALL ON/OFF 동작 중일 때 덮어주는 오버레이
         self.overlay = tk.Label(
             self,
             text="Running... Please wait",
@@ -207,16 +193,12 @@ class MainPage(tk.Frame):
         )
         self.overlay.place_forget()
 
-        # 초기 상태 반영
         self.enforce_shutter_from_config()
         self.refresh_osc_buttons()
         self.refresh_osc_sliders()
 
         self._tick()
 
-    # --------------------------------------------------
-    # 공통 / 헬퍼
-    # --------------------------------------------------
     def refresh_footer(self):
         self.msg_label.config(text=self.ctrl.contact_message)
 
@@ -229,7 +211,6 @@ class MainPage(tk.Frame):
         except Exception:
             pass
 
-    # 키보드 ← → 로 셔터 제어
     def _bind_shutter_keys(self, enable: bool):
         if enable and not self._shutter_bound:
             self.bind_all("<Right>", self._on_right)
@@ -251,7 +232,6 @@ class MainPage(tk.Frame):
     def set_shutter_enabled(self, enabled: bool):
         if enabled:
             if not self.r4.winfo_manager():
-                # ★ 항상 OSC 버튼보다 위에 오도록 before=self.osc_frame 사용
                 self.r4.pack(pady=8, before=self.osc_frame)
             self._bind_shutter_keys(True)
         else:
@@ -266,12 +246,8 @@ class MainPage(tk.Frame):
     def enforce_shutter_from_config(self):
         self.set_shutter_enabled(bool(self.ctrl.config.get("enable_shutter_shortcut", False)))
 
-    # --------------------------------------------------
-    # OSC 버튼 영역
-    # --------------------------------------------------
     def _osc_signature(self):
         buttons = self.ctrl.config.get("osc_buttons", [])
-        # enabled + label 기준으로 바뀌었는지 체크
         return tuple((bool(b.get("enabled")), b.get("label", "")) for b in buttons)
 
     def refresh_osc_buttons(self):
@@ -280,7 +256,6 @@ class MainPage(tk.Frame):
             return
         self._osc_sig = sig
 
-        # 기존 버튼 제거
         for w in self.osc_frame.winfo_children():
             w.destroy()
 
@@ -294,22 +269,20 @@ class MainPage(tk.Frame):
         for i, (idx, cfg) in enumerate(enabled_list):
             if i % per_row == 0:
                 row = tk.Frame(self.osc_frame, bg=BG)
-                row.pack(anchor="w", pady=4)  # 세로 간격
+                row.pack(anchor="w", pady=4)
 
             label = cfg.get("label") or f"OSC {idx+1}"
             btn = tk.Button(
                 row,
                 text=label,
-                width=12,   # 살짝 줄인 폭
+                width=12,
                 height=2,
                 bg=OSC_COLOR,
                 fg="black",
                 relief="raised",
             )
-            # 버튼 간 간격 넓게 (Surface Go 3 터치 고려)
             btn.pack(side="left", padx=10, pady=2)
 
-            # 마우스/터치 누름/뗌에 따라 press/release 전송
             btn.bind(
                 "<ButtonPress-1>",
                 lambda e, j=idx: self.ctrl.run_async(
@@ -329,9 +302,6 @@ class MainPage(tk.Frame):
                 ),
             )
 
-    # --------------------------------------------------
-    # OSC 슬라이더 영역 (2줄)
-    # --------------------------------------------------
     def _slider_signature(self):
         sliders = self.ctrl.config.get("osc_sliders", [])
         return tuple(
@@ -354,7 +324,6 @@ class MainPage(tk.Frame):
             return
         self._slider_sig = sig
 
-        # 기존 위젯 제거
         for w in self.slider_frame.winfo_children():
             w.destroy()
 
@@ -363,18 +332,15 @@ class MainPage(tk.Frame):
         if not enabled_list:
             return
 
-        # 각 슬라이더: 위에 제목, 아래 한 줄에 [값 0~100] [슬라이더 트랙]
         for idx, cfg in enabled_list:
             outer = tk.Frame(self.slider_frame, bg=BG)
             outer.pack(fill="x", pady=6)
 
-            # ─ 제목 (예: Main Opacity / Main Volume)
             label = cfg.get("label") or f"SLIDER {idx+1}"
             tk.Label(outer, text=label, fg=TEXT, bg=BG).pack(
                 anchor="w", padx=4
             )
 
-            # ─ 값 + 슬라이더 한 줄
             row = tk.Frame(outer, bg=BG)
             row.pack(fill="x", pady=(2, 0))
 
@@ -392,7 +358,6 @@ class MainPage(tk.Frame):
             if vmin == vmax:
                 vmax = vmin + 1.0
 
-            # --- 저장된 current 값 있으면 그 값 사용, 없으면 가운데 값 ---
             stored = cfg.get("current", None)
             if stored is not None:
                 try:
@@ -402,7 +367,6 @@ class MainPage(tk.Frame):
             else:
                 default = (vmin + vmax) / 2.0
 
-            # 0~100 표시용 라벨 변수 (슬라이더 왼쪽)
             value_var = tk.StringVar()
             value_var.set(self._format_slider_value(default, vmin, vmax))
 
@@ -416,36 +380,32 @@ class MainPage(tk.Frame):
             )
             val_label.pack(side="left", padx=4)
 
-            # ─ 흰색 테두리 박스(트랙)
             track_frame = tk.Frame(
                 row,
-                bg="#ffffff",          # 흰색 테두리
+                bg="#ffffff",
                 highlightthickness=0,
             )
             track_frame.pack(side="left", fill="x", expand=True, padx=(4, 8))
 
-            # 내부 실제 트랙(밝은 회색)
             inner_track = tk.Frame(
                 track_frame,
-                bg="#2b3137",          # 트랙 색
-                height=28,             # 트랙 높이
+                bg="#2b3137",
+                height=28,
             )
             inner_track.pack(fill="x", expand=True, padx=1, pady=1)
 
-            # 해상도: float → 0.01, int → 1
             if vtype == "int":
                 resolution = 1
             else:
                 resolution = 0.01
 
-            # ─ 실제 슬라이더 (손잡이 기본 흰색, 누르면 청록색)
             scale = tk.Scale(
                 inner_track,
                 from_=vmin,
                 to=vmax,
                 orient=tk.HORIZONTAL,
                 length=320,
-                bg="#ffffff",                 # 손잡이 기본색
+                bg="#ffffff",
                 fg=TEXT,
                 troughcolor="#2b3137",
                 highlightthickness=0,
@@ -454,26 +414,22 @@ class MainPage(tk.Frame):
                 bd=0,
                 relief="flat",
                 sliderrelief="flat",
-                activebackground=ACCENT,      # 누르면 청록색
-                width=24,                     # 슬라이더 세로 두께
+                activebackground=ACCENT,
+                width=24,
             )
             scale.set(default)
             scale.pack(fill="x", expand=True, padx=0, pady=0)
 
-            # 슬라이더를 움직이는 동안 값 갱신 + OSC 실시간 전송
             def _on_move(val, j=idx, vmin_local=vmin, vmax_local=vmax, var=value_var):
                 try:
                     v = float(val)
                 except Exception:
                     return
-                # 표시용 0~100 갱신
                 var.set(self._format_slider_value(v, vmin_local, vmax_local))
-                # OSC 전송 (실제 값: vmin~vmax 범위)
                 self._send_slider_value(j, v)
 
             scale.configure(command=_on_move)
 
-            # 마우스/터치에서 손을 뗄 때 현재 값을 config에 저장
             def _on_release(event, j=idx, s=scale):
                 val = s.get()
                 self._update_slider_current(j, val)
@@ -482,7 +438,6 @@ class MainPage(tk.Frame):
 
     def _format_slider_value(self, v, vmin: float, vmax: float):
         """
-        실제 값(v, vmin~vmax 범위)을 0~100 사이 정수 문자열로 변환.
         """
         try:
             fv = float(v)
@@ -517,7 +472,6 @@ class MainPage(tk.Frame):
             self.ctrl.log(f"OSC Slider {idx+1} invalid config; skip.")
             return
 
-        # run_async를 통해 백그라운드에서 전송
         self.ctrl.run_async(
             f"OSC SLIDER {idx+1}",
             self.ctrl._osc_send,
@@ -529,24 +483,17 @@ class MainPage(tk.Frame):
         )
 
     def _update_slider_current(self, idx: int, value):
-        """
-        현재 슬라이더 값을 config에 기록하고 저장.
-        """
         sliders = self.ctrl.config.setdefault("osc_sliders", [])
         if 0 <= idx < len(sliders):
             try:
                 sliders[idx]["current"] = float(value)
             except Exception:
                 return
-            # 슬라이더 움직임이 끝났을 때만 저장하므로 부담 적음
             try:
                 self.ctrl.save_config()
             except Exception:
                 self.ctrl.log(f"Failed to save slider {idx+1} value.")
 
-    # --------------------------------------------------
-    # 상태 표시 / 공통 UI
-    # --------------------------------------------------
     def _color_dot(self, status):
         return {
             "on": "#6dc36d",
@@ -648,7 +595,6 @@ class MainPage(tk.Frame):
         )
         self.msg_label.config(text=self.ctrl.contact_message)
 
-        # 셔터 & 숏컷 옵션 반영
         self.set_shutter_enabled(
             bool(self.ctrl.config.get("enable_shutter_shortcut", False))
         )
@@ -675,7 +621,6 @@ class MainPage(tk.Frame):
         else:
             self.overlay.place_forget()
 
-        # 설정이 바뀌었을 수도 있으니 주기적으로 체크
         self.refresh_osc_buttons()
         self.refresh_osc_sliders()
 
