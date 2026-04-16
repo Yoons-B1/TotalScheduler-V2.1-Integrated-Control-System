@@ -1,4 +1,3 @@
-# ---- 콘솔창 숨기기 ----
 import sys
 
 if getattr(sys, "frozen", False):
@@ -8,10 +7,8 @@ if getattr(sys, "frozen", False):
         kernel32 = ctypes.WinDLL("kernel32")
         user32 = ctypes.WinDLL("user32")
 
-        # 콘솔 윈도우 핸들 얻기
         hWnd = kernel32.GetConsoleWindow()
         if hWnd:
-            # 작업표시줄에서 안 보이도록 윈도우 스타일 변경
             GWL_EXSTYLE      = -20
             WS_EX_TOOLWINDOW = 0x00000080
             WS_EX_APPWINDOW  = 0x00040000
@@ -22,7 +19,6 @@ if getattr(sys, "frozen", False):
             user32.SetWindowLongW.restype  = ctypes.c_long
 
             style = user32.GetWindowLongW(hWnd, GWL_EXSTYLE)
-            # 작업표시줄용 플래그 제거, 툴윈도우 플래그 추가
             style |= WS_EX_TOOLWINDOW
             style &= ~WS_EX_APPWINDOW
             user32.SetWindowLongW(hWnd, GWL_EXSTYLE, style)
@@ -51,7 +47,6 @@ def show_first_run_popup(root):
     popup.transient(root)
     popup.grab_set()
 
-    # 창 크기 및 위치(화면 중앙)
     w, h = 420, 200
     sw = root.winfo_screenwidth()
     sh = root.winfo_screenheight()
@@ -59,7 +54,6 @@ def show_first_run_popup(root):
     y = (sh - h) // 2
     popup.geometry(f"{w}x{h}+{x}+{y}")
 
-    # 텍스트 라벨 (중앙 정렬)
     msg = (
         "Copyright © CreDL MEDIA Co., Ltd.\n\n"
         "Contact : antonio@credl.net\n"
@@ -76,7 +70,6 @@ def show_first_run_popup(root):
     )
     label.pack(expand=True, fill="both", padx=20, pady=(20, 10))
 
-    # OK 버튼
     ok_btn = tk.Button(
         popup,
         text="OK",
@@ -95,7 +88,6 @@ def show_first_run_popup(root):
 def main():
     root = tk.Tk()
 
-    # Surface Go 3용: 전체 기본 폰트 크기
     default_font = tkfont.nametofont("TkDefaultFont")
     default_font.configure(size=13)
     root.option_add("*Font", default_font)
@@ -103,12 +95,10 @@ def main():
     root.geometry("1280x900")
     root.configure(bg="#111315")
 
-    # 컨트롤러는 한 번만 생성
     ctrl = Controller(app_name=APP_TITLE, author=AUTHOR)
 
-    # WebUI 서버 시작 (모바일/태블릿용)
     web_port = ctrl.config.get("web_port", 9999)
-    ctrl.web_server_ok = False  # 기본은 False
+    ctrl.web_server_ok = False  
 
     try:
         t = start_web_server(ctrl, port=web_port)
@@ -118,15 +108,12 @@ def main():
         ctrl.log(f"WebUI start error: {e}")
         ctrl.web_server_ok = False
 
-    # --- 최초 실행시에만 저작권 팝업 표시 ---
     if getattr(ctrl, "first_run", False):
         show_first_run_popup(root)
 
-    # 항상 위에 표시 옵션
     if ctrl.config.get("always_on_top", False):
         root.attributes("-topmost", True)
 
-    # 메인 컨테이너
     container = tk.Frame(root, bg="#111315")
     container.pack(fill="both", expand=True)
 
@@ -137,7 +124,6 @@ def main():
             p.pack_forget()
         pages[name].pack(fill="both", expand=True)
 
-    # 설정(셋업) 페이지 열기
     def open_settings():
         pages["settings"] = SettingsPage(
             container,
@@ -151,11 +137,9 @@ def main():
         )
         show_page("settings")
 
-    # 메인 페이지 생성
     pages["main"] = MainPage(container, ctrl, on_open_settings=open_settings)
     pages["main"].pack(fill="both", expand=True)
 
-    # 종료 처리
     def on_close():
         if messagebox.askokcancel("Exit", "Quit Total Scheduler?"):
             ctrl.shutdown()
