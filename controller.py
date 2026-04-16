@@ -14,7 +14,7 @@ class _TCPKeeper(threading.Thread):
         self.sock = None
         self.is_connected = False
         self._local_stop = threading.Event()
-        self.initial_probe_complete = False  # 프로그램 처음 실행 시 알림 방지용
+        self.initial_probe_complete = False
 
     def stop(self):
         self._local_stop.set()
@@ -76,7 +76,7 @@ class Controller:
             token = self.config.get("telegram_bot_token")
             chat_id = self.config.get("telegram_chat_id")
             if not token or not chat_id:
-                return  # 설정 안 되어 있으면 아무것도 안 함
+                return  
 
             url = f"https://api.telegram.org/bot{token}/sendMessage"
             data = {
@@ -96,7 +96,6 @@ class Controller:
         os.makedirs(self.config_dir, exist_ok=True)
         self.config_path = os.path.join(self.config_dir, "config.json")
 
-        # 로그 디렉터리 (.config/logs)
         self.log_dir = os.path.join(self.config_dir, "logs")
         os.makedirs(self.log_dir, exist_ok=True)
 
@@ -104,13 +103,10 @@ class Controller:
         self.pc_error_flags = {}
         self.tcp_error_flags = {}
 
-        # key: "ip:port" -> timestamp (time.time())
         self.beam_transition_until = {}
 
-        # 직접 PC에 shutdown/reboot 명령을 보낸 상태인지 표시
         self.pc_shutdown_pending = {}
 
-        # key: "ip:port" -> timestamp (time.time())
         self.pc_expected_off_until = {}
 
         self.initial_probe_complete = False
@@ -120,27 +116,22 @@ class Controller:
 
         existed = os.path.exists(self.config_path)
 
-        # 설정 로드 / 기본 생성
         self.config = self._load_or_create_default()
 
-        # WebUI port 기본값
         if "web_port" not in self.config:
             self.config["web_port"] = 9999
 
         self.web_server_ok = False
 
 
-        # 첫 실행이면 True, 아니면 False
         self.first_run = not existed
 
         if "tcp_outputs" not in self.config:
             self.config["tcp_outputs"] = []
 
-        # OSC 버튼 설정 기본값
         if "osc_buttons" not in self.config:
             self.config["osc_buttons"] = []
 
-        # OSC 슬라이더 설정 기본값 (없으면 빈 리스트)
         if "osc_sliders" not in self.config:
             self.config["osc_sliders"] = []
 
@@ -175,7 +166,6 @@ class Controller:
 
         self._need_shutter_probe = set()
 
-        # NEW: offline override map (ip -> expiry ts)
         self._pc_offline_override = {}
 
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
@@ -212,24 +202,17 @@ class Controller:
         import time as _t
         ts = _t.strftime("%Y-%m-%d %H:%M:%S")
         line = f"[{ts}] {msg}"
-        # Enqueue for Tk log listeners
         self._log_queue.put(line)
-        # Keep a small in-memory ring buffer for WebUI
         try:
             self._log_ring.append(line)
-            # Keep only the latest 500 lines
             if len(self._log_ring) > 500:
                 self._log_ring = self._log_ring[-500:]
         except Exception:
-            # In case _log_ring is not initialized for some reason
             self._log_ring = [line]
 
-        # ✅ [DEBUG] 로그는 파일에는 남기지 않고,
-        #    화면(Tk 로그창)과 WebUI에만 남긴다.
         if msg.startswith("[DEBUG]") or msg.startswith("DEBUG:"):
             return
 
-        # --- 파일 로그 기록 (날짜별) ---
         try:
             date_str = _t.strftime("%Y-%m-%d")
             filename = f"TotalScheduler_{date_str}.log"
@@ -237,7 +220,6 @@ class Controller:
             with open(path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
 
-            # 최대 5일치 로그만 유지
             try:
                 files = sorted(
                     fn for fn in os.listdir(self.log_dir)
@@ -263,7 +245,6 @@ class Controller:
                 except Exception: pass
 
     def get_recent_logs(self, limit: int = 100):
-        """Return the latest N log lines for WebUI."""
         try:
             return self._log_ring[-limit:]
         except Exception:
@@ -285,7 +266,7 @@ class Controller:
                     },
                     "monitor_interval_sec": 3,
                     "sequential_delay_sec": 1,
-                    "wol_repeat": 2,   # ★ PC마다 WOL 기본 2회 전송
+                    "wol_repeat": 2,   
                     "between_group_delay_sec": 5,
                     "always_on_top": False,
                     "enable_shutter_shortcut": False,
@@ -360,57 +341,33 @@ class Controller:
 
     # ---- GROUP OPERATIONS ----
     def all_on(self):
-        """
-        ALL ON 순서:
-          1) BEAM 순차 ON
-          2) 5초 대기
-          3) TCP 버튼 순차 ON
-          4) 15초 대기
-          5) PC 순차 ON
-        """
+
         delay_beam_tcp = self.config.get("between_beam_tcp_delay_sec", 5)
         delay_tcp_pc   = self.config.get("between_tcp_pc_delay_sec", 15)
 
-        # 1) 프로젝터 순차 ON
         self.group_beam_on()
 
-        # 2) BEAM → TCP 사이 대기
         time.sleep(delay_beam_tcp)
 
-        # 3) TCP 출력 순차 ON
         self.group_tcp_on()
 
-        # 4) TCP → PC 사이 대기
         time.sleep(delay_tcp_pc)
 
-        # 5) PC 순차 ON
         self.group_pc_on()
 
     def all_off(self):
-        """
-        ALL OFF 순서 (ALL ON의 반대):
-          1) PC 순차 OFF
-          2) 15초 대기
-          3) TCP 버튼 순차 OFF
-          4) 5초 대기
-          5) BEAM 순차 OFF
-        """
+
         delay_beam_tcp = self.config.get("between_beam_tcp_delay_sec", 5)
         delay_tcp_pc   = self.config.get("between_tcp_pc_delay_sec", 15)
 
-        # 1) PC 순차 OFF
         self.group_pc_off()
 
-        # 2) PC → TCP 사이 대기 (ON 때의 TCP→PC 딜레이와 동일)
         time.sleep(delay_tcp_pc)
 
-        # 3) TCP 출력 순차 OFF
         self.group_tcp_off()
 
-        # 4) TCP → BEAM 사이 대기 (ON 때의 BEAM→TCP 딜레이와 동일)
         time.sleep(delay_beam_tcp)
 
-        # 5) 프로젝터 순차 OFF
         self.group_beam_off()
 
     def group_pc_on(self):
@@ -464,10 +421,6 @@ class Controller:
         for t in threads: t.join(timeout=0.8)
 
     def group_tcp_on(self):
-        """
-        Send TCP messages for entries that are marked to run on ALL ON.
-        Each send is: connect -> send -> close (no persistent connection).
-        """
         delay = self.config.get("sequential_delay_sec", 1)
         for item in self.config.get("tcp_outputs", []):
             if item.get("use_on"):
@@ -481,10 +434,6 @@ class Controller:
                 time.sleep(delay)
 
     def group_tcp_off(self):
-        """
-        Send TCP messages for entries that are marked to run on ALL OFF.
-        Each send is: connect -> send -> close (no persistent connection).
-        """
         delay = self.config.get("sequential_delay_sec", 1)
         for item in self.config.get("tcp_outputs", []):
             if item.get("use_off"):
@@ -499,10 +448,6 @@ class Controller:
 
     # ---- OSC OPS ----
     def _osc_build_message(self, address: str, value, vtype: str) -> bytes:
-        """Build a minimal OSC packet for a single argument.
-
-        Supports: float, int, string
-        """
         def pad4(b: bytes) -> bytes:
             return b + (b"\x00" * ((4 - (len(b) % 4)) % 4))
 
@@ -559,20 +504,6 @@ class Controller:
             self.log(f"OSC send failed {ip}:{port} {address} -> {e}")
 
     def send_osc_index(self, idx: int, phase: str = "press"):
-        """
-        메인페이지 OSC 버튼용.
-        phase="press"  → ON 값 전송
-        phase="release"→ OFF 값 전송
-
-        config 의 value 필드가 "1,0" 이면
-        - press: 1
-        - release: 0
-
-        "0,1" 이면 반대로,
-        그냥 "1" 하나만 적혀 있으면
-        - press: 1
-        - release: 0 으로 동작.
-        """
         buttons = self.config.get("osc_buttons", [])
         if not (0 <= idx < len(buttons)):
             self.log(f"OSC index {idx} out of range")
@@ -597,14 +528,12 @@ class Controller:
             self.log(f"OSC {idx+1} invalid config; skip.")
             return
 
-        # "1,0" 형태면 앞이 press, 뒤가 release
         on_str, off_str = None, None
         if "," in raw_val:
             parts = [p.strip() for p in raw_val.split(",", 1)]
             on_str = parts[0] or "1"
             off_str = parts[1] or "0"
         else:
-            # 값이 하나만 있으면 ON=value, OFF=0 으로
             on_str = raw_val or "1"
             off_str = "0"
 
@@ -649,7 +578,6 @@ class Controller:
             self.log(f"WOL skipped (no MAC) -> {ip}")
             return
 
-        # wol_repeat 설정값 (기본 2회)
         repeat = self.config.get("wol_repeat", 2)
         try:
             repeat = int(repeat)
@@ -660,7 +588,6 @@ class Controller:
 
         for i in range(repeat):
             self._wol(mac)
-            # 여러 번 보낼 때는 약간 간격을 둔다 (0.5초 정도)
             if i + 1 < repeat:
                 time.sleep(0.5)
 
@@ -718,9 +645,7 @@ class Controller:
         try:
             PJLink(host, p, pw).power_on()
             self.log(f"BEAM ON -> {host}:{p}")
-            # 정상 동작이면 에러 플래그 리셋
             self.beam_error_flags[key] = False
-            # 예열 구간 동안 BEAM 모니터링 에러 알림을 완화하기 위한 grace window 설정
             try:
                 grace = float(self.config.get("beam_transition_grace_sec", 90.0))
             except Exception:
@@ -830,7 +755,6 @@ class Controller:
 
         self.initial_probe_complete = True
 
-        # 상태 업데이트
         with self.state_lock:
             prev_status = {
                 pc.get("ip"): pc.get("status")
@@ -864,7 +788,6 @@ class Controller:
         while time.time() < deadline:
             any_on = self._quick_pc_probe_once()
             if not any_on:
-                # 모든 PC가 꺼졌고, shutdown_pending이 유지되고 있다면 여기서만 해제
                 try:
                     pcs = self.config.get("pcs", [])
                     for pc in pcs:
@@ -880,27 +803,21 @@ class Controller:
             time.sleep(5)
         self.log("Post-shutdown PC probe sequence finished.")
 
-    # ---- ALL ON 5분뒤 체크  ----
     def schedule_post_all_on_check(self, delay_sec: int = 300):
         def _job():
             try:
-                # 부팅/전원 안정화 대기
                 time.sleep(delay_sec)
 
-                # 현재 상태 스냅샷
                 with self.state_lock:
                     pcs_snapshot = list(self.state.get("pcs", []))
                     beams_snapshot = list(self.state.get("projectors", []))
 
-                # 아직 켜지지 않은 PC
                 off_pcs = [pc for pc in pcs_snapshot if str(pc.get("status")) != "on"]
-                # 아직 켜지지 않은 BEAM
                 off_beams = [b for b in beams_snapshot if str(b.get("status")) != "on"]
 
                 for pc in off_pcs:
                     ip = pc.get("ip", "unknown")
                     port = pc.get("port", 5050)
-                    # 메시지 짧은 형식
                     self.send_telegram_alert(
                         f"[PC] {ip}:{port} offline after ALL ON (5min timeout)"
                     )
@@ -926,13 +843,10 @@ class Controller:
             do_pcs = (now - self._last_pc_poll) >= max(1, int(self.config.get("monitor_interval_sec", 3)))
             do_beams = (now - self._last_beam_poll) >= 3
 
-            # --- PC 상태: RemotePower TCP로만 체크 ---
             if do_pcs:
-                # RemotePower.exe(포트 5050)에 TCP 접속 시도하여 상태 갱신
                 self._quick_pc_probe_once()
                 self._last_pc_poll = now
 
-            # --- BEAM 상태 모니터링 + 오류 알림 ---
             if do_beams:
                 proj = self.config.get("projectors", [])
                 if proj:
@@ -945,13 +859,11 @@ class Controller:
                         pow_state = pj.get_power_state()
                         status = "on" if pow_state == "on" else ("off" if pow_state == "off" else "error")
 
-                        # --- 셔터 상태 항상 읽기 + 값 정규화 ---
                         sh = None
                         try:
                             raw_sh = pj.get_shutter_state()
                             if raw_sh is not None:
                                 s = str(raw_sh).strip().lower()
-                                # Panasonic 등 AVMT=30(열림), 31(닫힘) 대응
                                 if s in ("30", "open", "0"):
                                     sh = "open"
                                 elif s in ("31", "close", "1"):
@@ -961,7 +873,6 @@ class Controller:
                         except Exception:
                             sh = None
 
-                        # 상태를 state["projectors"]에 반영
                         with self.state_lock:
                             beams = self.state.get("projectors", [])
                             updated = False
@@ -1043,8 +954,7 @@ class Controller:
 
         if is_pc_cmd:
             self.pc_shutdown_pending[key] = True
-            # 명령 직후 일정 시간 동안은 "예상된 종료"로 간주하기 위한 시간 기록
-            self.pc_expected_off_until[key] = time.time() + 60.0  # 60초 동안 grace
+            self.pc_expected_off_until[key] = time.time() + 60.0  
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1071,7 +981,6 @@ class Controller:
             s.sendall(data)
             self.log(f"TCP sent {ip}:{port} ({len(data)} bytes)")
 
-            # 상태 초기화
             self.pc_error_flags[key] = False
             self.tcp_error_flags[key] = False
 
