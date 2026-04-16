@@ -339,7 +339,6 @@ class Controller:
             key = f"{host}:{port}"
             self.beam_transition_until[key] = deadline
 
-    # ---- GROUP OPERATIONS ----
     def all_on(self):
 
         delay_beam_tcp = self.config.get("between_beam_tcp_delay_sec", 5)
@@ -446,7 +445,6 @@ class Controller:
                 self.log(f"TCP OFF sent -> {ip}:{port} ({data})")
                 time.sleep(delay)
 
-    # ---- OSC OPS ----
     def _osc_build_message(self, address: str, value, vtype: str) -> bytes:
         def pad4(b: bytes) -> bytes:
             return b + (b"\x00" * ((4 - (len(b) % 4)) % 4))
@@ -561,7 +559,6 @@ class Controller:
         self.log(f"OSC {idx+1} {tag} -> {ip}:{port} {addr} ({vtype}={value})")
         self._osc_send(ip, port, addr, value, vtype)
 
-    # ---- PC OPS ----
     def _find_pc(self, ip):
         for pc in self.config.get("pcs", []):
             if pc.get("ip") == ip: return pc
@@ -624,7 +621,6 @@ class Controller:
 
         self._set_beam_transition_for_all_beams()
 
-    # ---- PROJECTOR OPS ----
     def _find_beam(self, ip, port=None):
         for b in self.config.get("projectors", []):
             if b.get("ip") == ip and (port is None or int(b.get("port",4352)) == int(port)):
@@ -702,7 +698,6 @@ class Controller:
             if changed:
                 self.state["projectors"] = beams
 
-    # ---- QUICK PROBE LOGIC ----
     def _quick_pc_probe_once(self):
 
         pcs = self.config.get("pcs", [])
@@ -835,7 +830,6 @@ class Controller:
 
         threading.Thread(target=_job, daemon=True).start()
 
-    # ---- MONITOR LOOP ----
     def _monitor_loop(self):
         base_interval = 1
         while not self._stop.is_set():
@@ -926,7 +920,6 @@ class Controller:
 
             time.sleep(base_interval)
 
-    # ---- HELPERS ----
     def _wol(self, mac):
         mac = mac.replace(":", "").replace("-", "").lower()
         if len(mac) != 12: 
