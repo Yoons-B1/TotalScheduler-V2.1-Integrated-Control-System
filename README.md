@@ -1,4 +1,4 @@
-[![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![Release](https://img.shields.io/badge/Release-V2.1--LC14-fc1ba6)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![License](https://img.shields.io/github/license/yoons100/TotalScheduler-V2.1-Integrated-Control-System)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![Release](https://img.shields.io/badge/Release-V2.1--LC17-fc1ba6)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![License](https://img.shields.io/github/license/yoons100/TotalScheduler-V2.1-Integrated-Control-System)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/blob/main/LICENSE)
 # TotalScheduler V2.1 - [DEMO]
 
 > Python-based **Windows** integrated control system for PCs, projectors, relays, and media playback environments.  
@@ -28,6 +28,7 @@
   * (e.g., scheduled content playback, Time-based LED brightness control)
 * Weekly auto scheduling (ALL ON / ALL OFF)
 * Built-in Web Server for monitoring via mobile/tablet (local network)
+* OSC Input control support (e.g., TouchOSC)
 * Demo available for 2 weeks
 * Reusable by refreshing `trial.json`
 
