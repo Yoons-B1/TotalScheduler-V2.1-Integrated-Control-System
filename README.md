@@ -31,7 +31,7 @@ https://apps.microsoft.com/detail/9NP94Q0D2M2R
 ---
 
 ## 개요
-TotalScheduler는 PC, 빔프로젝터, 릴레이, 순차전원공급기 등을 관리하는 통합 제어 시스템입니다.  
+TotalScheduler는 PC, 빔프로젝터, 릴레이, 순차전원공급기 등을 관리하는 Python 기반의 통합 제어 시스템입니다.  
 미술관, 전시장 등의 AV 시스템 자동화를 위해 설계되었습니다.
 
 ---
