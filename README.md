@@ -1,7 +1,10 @@
 [![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![Release](https://img.shields.io/badge/Release-V2.2--MS20-fc1ba6)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases) [![License](https://img.shields.io/github/license/yoons100/TotalScheduler-V2.1-Integrated-Control-System)](https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/blob/main/LICENSE)
-# TotalScheduler V2 - [DEMO]
 
-> 토탈스케줄러V2가 MS스토어에 런칭했습니다.  
+
+# <img width="64" height="64" alt="total" src="https://github.com/user-attachments/assets/50c4bd65-1998-48be-b0b5-9c7bc7b12ffa" /> TotalScheduler V2 - [DEMO]
+
+> 통합제어 시스템 - 토탈스케줄러V2가 MS스토어에 런칭했습니다.
+>   
 > 기존 설치방식은 2개의 보안메시지가 뜨게 됩니다.
 > ```
 > 1. 앱 다운로드 또는 압축해제시 : 신뢰할 수 있는 프로그램에 대한 보안경고
@@ -15,7 +18,14 @@
 > MS스토어의 계정으로 로그인 해서 받아야 하는 불편함이 생겼지만,  
 > 보안경고 없이, 자동업데이트를 지원해서 편리해진 점도 있습니다.  
 > 양해해 주시기 바라며,  
-> 아래 링크 또는 앱뱃지를 통해 다운로드 가능합니다.  
+> 앱뱃지 또는 아래 링크
+를 통해 다운로드 가능합니다.
+
+<a href="https://get.microsoft.com/installer/download/9np94q0d2m2r?referrer=appbadge" target="_self" >
+	<img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
+</a>
+
+https://apps.microsoft.com/detail/9NP94Q0D2M2R
 
 ---
 
