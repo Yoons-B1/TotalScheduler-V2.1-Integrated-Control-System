@@ -308,8 +308,8 @@ Example:
 
 - Firewall must allow required ports (automatically configured when running install_all.bat)  
 - If using non-default ports, allow manually:  
-  OSC (7000~7001, 9001)  
-  TCP (6000~6001)  
+  OSC (7000-7001, 9001)  
+  TCP (6000-6001)  
   WebServer (9999)  
 
 - Red indicator = error or offline state  
