@@ -14,7 +14,7 @@
 > 첫번째 메시지는 인증된 개발자가 만든 앱이 아니라는 경고로 안티바이러스 프로그램에서 실행을 막고 파일을 지우는 경우도 생기게 됩니다.  
 > 이것은 바이러스에 감염된 앱이 아니어도 공식 앱개발 인증서로 서명하지 않은 앱에서 생기는 문제 입니다.  
 > (앱개발 인증서는 비용이 제법 나갑니다;;)  
-> 이 문제를 해결하기위해, MS스토어를 통해 공식인증서가 서명된 앱으로 배포하게 되었습니다.  
+> 이 문제를 해결하기 위해, MS스토어를 통해 공식인증서가 서명된 앱으로 배포하게 되었습니다.  
 > MS스토어의 계정으로 로그인 해서 받아야 하는 불편함이 생겼지만,  
 > 보안경고 없이, 자동업데이트를 지원해서 편리해진 점도 있습니다.  
 > 양해해 주시기 바라며,  
@@ -123,9 +123,17 @@ OSC 버튼/슬라이더
 - 설정된 시간에 맞춰 자동 실행 
 
 ### WebServer
-- 같은PC에서는 웹브라우저에 "http://127.0.0.1:9999/remote"로 접속
-- 다른 디바이스(모바일/태블릿)에서는 "http://<PC_IP>:9999/remote"로 접속.
-예 ) http://192.168.0.100:9999/remote
+- 같은PC에서는 웹브라우저에 아래 주소로 접속  
+  `http://127.0.0.1:9999/remote`
+  
+- 다른 디바이스(모바일/태블릿)에서는 해당 IP로 접속  
+  `http://<PC_IP>:9999/remote'
+  
+예시:  
+`http://192.168.0.100:9999/remote`
+
+### 설정파일 경로
+`C:\Users\[user name]\Documents\TotalScheduler\.config`
 
 ---
 
@@ -196,7 +204,7 @@ It is designed for AV system automation in environments such as museums and exhi
 - Zigbee plug control (TV power, work lights, LED power)  
 - Server room temperature/humidity monitoring (sensor integration)  
 - License key authentication required (license is bound to a specific PC)  
-- Paid PRO features require additional setup on the control PC and are currently available only in Korea  
+- Paid PRO features require additional setup on the control PC and are currently available **only in Korea**  
 
 ---
 
@@ -286,6 +294,11 @@ Make sure to click **Save Settings**
 
 Example:  
 `http://192.168.0.100:9999/remote`
+
+---
+
+### [Configuration Path]
+`C:\Users\[user name]\Documents\TotalScheduler\.config`
 
 ---
 
