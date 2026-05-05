@@ -213,6 +213,8 @@ It is designed for AV system automation in environments such as museums and exhi
 ---
 
 ## 2. RemotePower Structure (PC Control)
+Download RemotePowerV2.zip to install on the controlled PC  
+<a href="https://github.com/yoons100/TotalScheduler-V2.1-Integrated-Control-System/releases/download/V2.2-MS20/RemotePowerV2.zip">**Download RemotePowerV2.zip**</a>
 ```
 RemotePowerV2.zip
 ├ RemotePowerService/
