@@ -135,6 +135,20 @@ OSC 버튼/슬라이더
 예시:  
 `http://192.168.0.100:9999/remote`
 
+### OSC 인풋 명령
+```
+/ts/start/allon
+/ts/start/alloff
+/ts/start/pcon
+/ts/start/pcoff
+/ts/start/beamon
+/ts/start/beamoff
+/ts/start/tcpon
+/ts/start/tcpoff
+/ts/start/zbon
+/ts/start/zboff
+```
+
 ### 설정파일 경로
 `C:\Users\[user name]\Documents\TotalScheduler\.config`
 
@@ -301,6 +315,22 @@ Make sure to click **Save Settings**
 Example:  
 `http://192.168.0.100:9999/remote`
 
+---
+
+### OSC Input Commands
+
+```
+/ts/start/allon
+/ts/start/alloff
+/ts/start/pcon
+/ts/start/pcoff
+/ts/start/beamon
+/ts/start/beamoff
+/ts/start/tcpon
+/ts/start/tcpoff
+/ts/start/zbon
+/ts/start/zboff
+```
 ---
 
 ### [Configuration Path]
