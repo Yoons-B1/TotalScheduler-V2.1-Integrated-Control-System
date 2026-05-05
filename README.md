@@ -82,6 +82,7 @@ RemotePowerV2.zip
 - Setup 페이지에서 "Download RemotePowerV2"를 눌러 PC제어용 파일을 제어PC에 복사.
 - 제어되는 PC에 복사한 "RemotePowerV2.zip"을 압축풀어 C폴더에 넣고, "install_all.bat"을 관리자권한으로 실행.
 - "RemotePowerService"가 윈도우서비스로 등록되며, "RemoteState"가 시스템 트레이에 생김
+  (설치 후 RemotePowerV2 폴더를 지우지 마세요)
 - 메인PC의 TotalSchedulerV2 앱에서 Setup 페이지 -> 장비 등록
 
 ### 장비 등록
